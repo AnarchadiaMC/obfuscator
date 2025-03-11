@@ -10,26 +10,25 @@
 
 package me.superblaubeere27;
 
-import java.nio.charset.StandardCharsets;
-
-import static org.junit.Assert.assertEquals;
-import org.junit.Test;
-
 import me.superblaubeere27.jobf.processors.encryption.string.AESEncryptionAlgorithm;
 import me.superblaubeere27.jobf.processors.encryption.string.BlowfishEncryptionAlgorithm;
 import me.superblaubeere27.jobf.processors.encryption.string.DESEncryptionAlgorithm;
 import me.superblaubeere27.jobf.processors.encryption.string.XOREncryptionAlgorithm;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 public class CipherTest {
 
     @Test
     public void testDES() {
         String encrypt = "Encryption works.";
-        byte[] key = "123456 is a safe key".getBytes(StandardCharsets.UTF_8);
+        String key = "123456 is a safe key";
 
         DESEncryptionAlgorithm algorithm = new DESEncryptionAlgorithm();
 
-        byte[] enc = algorithm.encrypt(encrypt, key);
+        String enc = algorithm.encrypt(encrypt, key);
+
 
         assertEquals(encrypt, DESEncryptionAlgorithm.decrypt(enc, key));
     }
@@ -38,11 +37,12 @@ public class CipherTest {
     @Test
     public void testXOR() {
         String encrypt = "Encryption works.";
-        byte[] key = "123456 is a safe key".getBytes(StandardCharsets.UTF_8);
+        String key = "123456 is a safe key";
 
         XOREncryptionAlgorithm algorithm = new XOREncryptionAlgorithm();
 
-        byte[] enc = algorithm.encrypt(encrypt, key);
+        String enc = algorithm.encrypt(encrypt, key);
+
 
         assertEquals(encrypt, XOREncryptionAlgorithm.decrypt(enc, key));
     }
@@ -50,11 +50,11 @@ public class CipherTest {
     @Test
     public void testAES() {
         String encrypt = "Encryption works.";
-        byte[] key = "123456 is a safe key".getBytes(StandardCharsets.UTF_8);
+        String key = "123456 is a safe key";
 
         AESEncryptionAlgorithm algorithm = new AESEncryptionAlgorithm();
 
-        byte[] enc = algorithm.encrypt(encrypt, key);
+        String enc = algorithm.encrypt(encrypt, key);
 
         assertEquals(encrypt, AESEncryptionAlgorithm.decrypt(enc, key));
     }
@@ -62,11 +62,11 @@ public class CipherTest {
     @Test
     public void testBlowfish() {
         String encrypt = "Encryption works.";
-        byte[] key = "123456 is a safe key".getBytes(StandardCharsets.UTF_8);
+        String key = "123456 is a safe key";
 
         BlowfishEncryptionAlgorithm algorithm = new BlowfishEncryptionAlgorithm();
 
-        byte[] enc = algorithm.encrypt(encrypt, key);
+        String enc = algorithm.encrypt(encrypt, key);
 
         assertEquals(encrypt, BlowfishEncryptionAlgorithm.decrypt(enc, key));
     }

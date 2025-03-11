@@ -12,6 +12,6 @@ package me.superblaubeere27.jobf.processors.encryption.string;
 
 public interface IStringEncryptionAlgorithm {
 
-    byte[] encrypt(String obj, byte[] key);
+    String encrypt(String obj, String key);
 
 }

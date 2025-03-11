@@ -45,6 +45,7 @@ import me.superblaubeere27.jobf.processors.encryption.string.IStringEncryptionAl
 import me.superblaubeere27.jobf.processors.encryption.string.XOREncryptionAlgorithm;
 import me.superblaubeere27.jobf.utils.NameUtils;
 import me.superblaubeere27.jobf.utils.NodeUtils;
+import me.superblaubeere27.jobf.utils.StringManipulationUtils;
 import me.superblaubeere27.jobf.utils.values.BooleanValue;
 import me.superblaubeere27.jobf.utils.values.DeprecationLevel;
 import me.superblaubeere27.jobf.utils.values.EnabledValue;
@@ -254,7 +255,7 @@ public class StringEncryptionTransformer implements IClassTransformer {
                     String name;
 
                     if (!encryptionMethodMap.containsKey(processor)) {
-                        encryptionMethodMap.put(processor, name = NameUtils.generateMethodName(node, "([B[B)Ljava/lang/String;"));
+                        encryptionMethodMap.put(processor, name = NameUtils.generateMethodName(node, "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"));
                     } else {
                         name = encryptionMethodMap.get(processor);
                     }
@@ -264,22 +265,12 @@ public class StringEncryptionTransformer implements IClassTransformer {
                     toAdd.add(new LineNumberNode(j, label));
                     toAdd.add(new FieldInsnNode(Opcodes.GETSTATIC, node.name, stringArrayName, "[Ljava/lang/String;"));
                     toAdd.add(NodeUtils.generateIntPush(j));
-                    
-                    // Generate random key as byte array instead of string
-                    byte[] keyBytes = new byte[8]; // Use 8 bytes for key
-                    random.nextBytes(keyBytes);
-                    
-                    // Encrypt string using byte array key
-                    byte[] encryptedBytes = processor.encrypt(arrayMap.get(j), keyBytes);
-                    
-                    // Add bytecode to create encrypted data byte array
-                    toAdd.add(NodeUtils.generateByteArray(encryptedBytes));
-                    
-                    // Add bytecode to create key byte array
-                    toAdd.add(NodeUtils.generateByteArray(keyBytes));
-                    
-                    // Call decrypt method with both byte arrays
-                    toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, node.name, name, "([B[B)Ljava/lang/String;", false));
+//                toAdd.add(getInstructions(integerList.get(j)));
+                    String key = StringManipulationUtils.generateString(5);
+                    toAdd.add(new LdcInsnNode(processor.encrypt(arrayMap.get(j), key)));
+                    toAdd.add(new LdcInsnNode(key));
+//                    System.out.println(name);
+                    toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, node.name, name, "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false));
 
                     toAdd.add(new InsnNode(Opcodes.AASTORE));
                 }
