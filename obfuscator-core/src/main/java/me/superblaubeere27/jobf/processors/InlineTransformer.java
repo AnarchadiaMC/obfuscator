@@ -17,16 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import lombok.extern.slf4j.Slf4j;
-import me.superblaubeere27.annotations.ObfuscationTransformer;
-import me.superblaubeere27.jobf.IClassTransformer;
-import me.superblaubeere27.jobf.JObfImpl;
-import me.superblaubeere27.jobf.ProcessorCallback;
-import me.superblaubeere27.jobf.utils.InliningUtils;
-import me.superblaubeere27.jobf.utils.NodeUtils;
-import me.superblaubeere27.jobf.utils.Utils;
-import me.superblaubeere27.jobf.utils.values.DeprecationLevel;
-import me.superblaubeere27.jobf.utils.values.EnabledValue;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -38,9 +28,21 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.tree.analysis.Frame;
 import org.objectweb.asm.tree.analysis.SourceInterpreter;
 import org.objectweb.asm.tree.analysis.SourceValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j(topic = "obfuscator")
+import me.superblaubeere27.annotations.ObfuscationTransformer;
+import me.superblaubeere27.jobf.IClassTransformer;
+import me.superblaubeere27.jobf.JObfImpl;
+import me.superblaubeere27.jobf.ProcessorCallback;
+import me.superblaubeere27.jobf.utils.InliningUtils;
+import me.superblaubeere27.jobf.utils.NodeUtils;
+import me.superblaubeere27.jobf.utils.Utils;
+import me.superblaubeere27.jobf.utils.values.DeprecationLevel;
+import me.superblaubeere27.jobf.utils.values.EnabledValue;
+
 public class InlineTransformer implements IClassTransformer {
+    private static final Logger log = LoggerFactory.getLogger("obfuscator");
     private static Random random = new Random();
     private static List<String> exceptions = new ArrayList<>();
 

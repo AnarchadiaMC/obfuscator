@@ -21,7 +21,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
-import lombok.extern.slf4j.Slf4j;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.commons.ClassRemapper;
+import org.objectweb.asm.commons.Remapper;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import me.superblaubeere27.jobf.JObfImpl;
 import me.superblaubeere27.jobf.utils.ClassTree;
 import me.superblaubeere27.jobf.utils.NameUtils;
@@ -30,16 +39,9 @@ import me.superblaubeere27.jobf.utils.values.BooleanValue;
 import me.superblaubeere27.jobf.utils.values.DeprecationLevel;
 import me.superblaubeere27.jobf.utils.values.EnabledValue;
 import me.superblaubeere27.jobf.utils.values.StringValue;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.commons.ClassRemapper;
-import org.objectweb.asm.commons.Remapper;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.MethodNode;
 
-@Slf4j(topic = "obfuscator")
 public class NameObfuscation implements INameObfuscationProcessor {
+    private static final Logger log = LoggerFactory.getLogger("obfuscator");
     private static final String PROCESSOR_NAME = "NameObfuscation";
     private static final Random random = new Random();
     private final EnabledValue enabled = new EnabledValue(PROCESSOR_NAME, DeprecationLevel.OK, false);

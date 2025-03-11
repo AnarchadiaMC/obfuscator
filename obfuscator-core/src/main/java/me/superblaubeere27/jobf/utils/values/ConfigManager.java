@@ -14,16 +14,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j(topic = "obfuscator")
 public class ConfigManager {
+    private static final Logger log = LoggerFactory.getLogger("obfuscator");
     private static Gson gson = new Gson();
 
     public static String generateConfig(Configuration config, boolean prettyPrint) {

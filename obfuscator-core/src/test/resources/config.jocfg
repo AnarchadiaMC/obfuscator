@@ -5,9 +5,6 @@
   "InvokeDynamic": {
     "Enabled": true
   },
-  "HWIDPRotection": {
-    "Enabled": false
-  },
   "LineNumberRemover": {
     "Enabled": true,
     "Rename local variables": true,

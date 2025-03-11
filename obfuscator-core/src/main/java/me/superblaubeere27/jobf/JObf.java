@@ -10,13 +10,9 @@
 
 package me.superblaubeere27.jobf;
 
-import javax.swing.JTextPane;
-import javax.swing.UIManager;
-import java.awt.GraphicsEnvironment;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -24,124 +20,105 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.formdev.flatlaf.FlatDarculaLaf;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.io.ByteStreams;
+
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import lombok.extern.slf4j.Slf4j;
-import me.superblaubeere27.jobf.processors.packager.Packager;
-import me.superblaubeere27.jobf.ui.GUI;
-import me.superblaubeere27.jobf.utils.ConsoleUtils;
-import me.superblaubeere27.jobf.utils.Templates;
-import me.superblaubeere27.jobf.utils.Utils;
-import me.superblaubeere27.jobf.utils.VersionComparator;
 import me.superblaubeere27.jobf.utils.values.ConfigManager;
 import me.superblaubeere27.jobf.utils.values.Configuration;
 
-@Slf4j(topic = "obfuscator")
 public class JObf {
+    private static final Logger log = LoggerFactory.getLogger("obfuscator");
+    
     public static final String SHORT_VERSION = (JObf.class.getPackage().getImplementationVersion() == null ? "DEV" : "v" + JObf.class.getPackage().getImplementationVersion()) + " by superblaubeere27";
     public static final String VERSION = "obfuscator " + (JObf.class.getPackage().getImplementationVersion() == null ? "DEV" : "v" + JObf.class.getPackage().getImplementationVersion()) + " by superblaubeere27";
 
     public static boolean VERBOSE = false;
-    //#if buildType=="gui"
-    private static GUI gui;
-    //#endif
-
-    public static JTextPane getGui() {
-        return gui != null ? gui.logArea : null;
-    }
 
     public static void main(String[] args) throws Exception {
-        if (JObf.class.getPackage().getImplementationVersion() == null) {
-            VERBOSE = true;
-        }
-
-
-        Class.forName(JObfImpl.class.getCanonicalName());
-
-        String version = checkForUpdate();
+        log.info(VERSION);
+        log.info("");
 
         OptionParser parser = new OptionParser();
-        parser.accepts("jarIn").withRequiredArg().required();
-        parser.accepts("jarOut").withRequiredArg();
-        parser.accepts("config").withOptionalArg().ofType(File.class);
-        parser.accepts("cp").withOptionalArg().describedAs("ClassPath").ofType(File.class);
-        parser.accepts("scriptFile").withOptionalArg().describedAs("[Not documented] JS script file").ofType(File.class);
-        parser.accepts("threads").withOptionalArg().ofType(Integer.class).defaultsTo(Runtime.getRuntime().availableProcessors()).describedAs("Thread count; Please don't use more threads than you have cores. It might hang up your system");
-        parser.accepts("verbose").withOptionalArg();
-        parser.accepts("help").forHelp();
-        parser.accepts("version").forHelp();
+
+        parser.accepts("help", "Shows this help menu").forHelp();
+        parser.accepts("version", "Displays the version number");
+        parser.accepts("jarIn", "The input jar").withRequiredArg().required();
+        parser.accepts("jarOut", "The output jar").withRequiredArg().required();
+        parser.accepts("config", "The config file").withRequiredArg();
+        parser.accepts("script", "Script for the obfuscator").withRequiredArg();
+        parser.accepts("verbose", "Displays verbose debug output");
+        parser.accepts("noUpdate", "Skip update check");
+        parser.accepts("threads", "Number of threads").withRequiredArg().ofType(Integer.class).defaultsTo(Runtime.getRuntime().availableProcessors());
+        parser.accepts("skipLibs", "Skip extracting libraries");
+        parser.accepts("libraries", "List of additional libraries").withRequiredArg();
 
         try {
             OptionSet options = parser.parse(args);
 
             if (options.has("help")) {
-                System.out.println(VERSION);
                 parser.printHelpOn(System.out);
                 return;
-            } else if (options.has("version")) {
+            }
+
+            if (options.has("version")) {
                 System.out.println(VERSION);
                 return;
             }
 
-            if (options.has("verbose")) {
-                VERBOSE = true;
-            }
+            VERBOSE = options.has("verbose");
 
             String jarIn = (String) options.valueOf("jarIn");
             String jarOut = (String) options.valueOf("jarOut");
-            File configPath = options.has("config") ? (File) options.valueOf("config") : null;
+            File configPath = null;
 
-            String scriptContent = "";
-
-            if (options.has("scriptFile")) {
-                scriptContent = new String(Files.readAllBytes(((File) options.valueOf("scriptFile")).toPath()), StandardCharsets.UTF_8);
+            if (options.has("config")) {
+                configPath = new File((String) options.valueOf("config"));
             }
 
-            boolean outdated = version != null;
-            boolean embedded = false;
-            int threads = Math.max(1, (Integer) options.valueOf("threads"));
+            String scriptContent = null;
+            if (options.has("script")) {
+                scriptContent = new String(Files.readAllBytes(new File((String) options.valueOf("script")).toPath()), StandardCharsets.UTF_8);
+            }
 
             List<String> libraries = new ArrayList<>();
 
-            if (options.has("cp")) {
-                for (Object cp : options.valuesOf("cp")) {
-                    libraries.add(cp.toString());
-                }
+            if (options.has("libraries")) {
+                libraries.addAll(Arrays.asList(((String) options.valueOf("libraries")).split(",")));
             }
 
-            runObfuscator(jarIn, jarOut, configPath, libraries, outdated, embedded, version, scriptContent, threads);
-        } catch (OptionException e) {
-            log.error(e.getMessage() + " (Tip: try --help and even if you specified a config you have to specify an input and output jar)");
+            boolean updateCheck = !options.has("noUpdate");
+            int threads = (int) options.valueOf("threads");
 
-            if (GraphicsEnvironment.isHeadless()) {
-                log.info("This build is a headless build, so GUI is not available");
-                return;
-            }
+            boolean outdated = false;
 
-            log.info("Starting in GUI Mode");
+            if (updateCheck) {
+                String version = checkForUpdate();
 
-            try {
-                if (Utils.isWindows()) {
-                    FlatDarculaLaf.setup();
+                if (version != null) {
+                    log.info("Update check was successful");
+
+                    outdated = version != null && !version.equals(JObf.class.getPackage().getImplementationVersion());
+
+                    if (outdated) {
+                        log.info("Your version is outdated. Latest version: " + version);
+                    }
                 } else {
-                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-                }
-            } catch (Exception e1) {
-                try {
-                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-                } catch (Exception e2) {
-                    e1.printStackTrace();
+                    log.info("Update check failed");
                 }
             }
 
-            Templates.loadTemplates();
+            log.info("Running on " + threads + " threads");
 
-            Packager.INSTANCE.isEnabled();
-
-            gui = new GUI(version);
+            runObfuscator(jarIn, jarOut, configPath, libraries, outdated, false, null, scriptContent, threads);
+        } catch (OptionException e) {
+            log.error(e.getMessage());
+            log.error("");
+            parser.printHelpOn(System.out);
         }
     }
 
@@ -150,32 +127,9 @@ public class JObf {
     }
 
     private static boolean runObfuscator(String jarIn, String jarOut, File configPath, List<String> libraries, boolean outdated, boolean embedded, String version, String scriptContent, int threads) throws IOException, InterruptedException {
-        if (outdated) {
-            log.info(ConsoleUtils.formatBox("Update available", true, Arrays.asList(
-                    "An update is available: v" + version,
-                    "(Current version: " + SHORT_VERSION + ")",
-                    "The latest version can be downloaded at",
-                    "https://github.com/superblaubeere27/obfuscator/releases/latest"
-            )));
-        }
-
-        log.info("\n" +
-                "        _      __                     _             \n" +
-                "       | |    / _|                   | |            \n" +
-                "   ___ | |__ | |_ _   _ ___  ___ __ _| |_ ___  _ __ \n" +
-                "  / _ \\| '_ \\|  _| | | / __|/ __/ _` | __/ _ \\| '__|\n" +
-                " | (_) | |_) | | | |_| \\__ \\ (_| (_| | || (_) | |   \n" +
-                "  \\___/|_.__/|_|  \\__,_|___/\\___\\__,_|\\__\\___/|_|   \n" +
-                "   " + SHORT_VERSION + (embedded ? " (EMBEDDED)" : outdated ? " (OUTDATED)" : " (LATEST)") +
-            "\n\n");
-
-
-        log.info("\n"+ ConsoleUtils.formatBox("Configuration", false, Arrays.asList(
-                "Input:      " + jarIn,
-                "Output:     " + jarOut,
-                "Config:     " + (configPath != null ? configPath.getPath() : "")
-        )));
-
+        log.info("Input: " + jarIn);
+        log.info("Output: " + jarOut);
+        
         Configuration config = new Configuration(jarIn, jarOut, scriptContent, libraries);
 
         if (configPath != null) {
@@ -185,78 +139,33 @@ public class JObf {
             }
 
             config = ConfigManager.loadConfig(new String(ByteStreams.toByteArray(new FileInputStream(configPath)), StandardCharsets.UTF_8));
-        } else {
-            log.warn("\n"+ConsoleUtils.formatBox("No config file", true, Arrays.asList(
-                    "You didn't specify a configuration, so the ",
-                    "obfuscator is using the default configuration.",
-                    " ",
-                    "This might cause the output jar to be invalid.",
-                    "If you want to create a config, please start the",
-                    "obfuscator in GUI Mode (run it without cli args).",
-                    "",
-                    !embedded ? "The program will resume in 2 sec" : "Continue..."
-            ))+"\n");
-            if (!embedded) {
-                Thread.sleep(2000);
-            }
+            config.setInput(jarIn);
+            config.setOutput(jarOut);
         }
-
-        config.setInput(jarIn);
-        config.setOutput(jarOut);
 
         config.getLibraries().addAll(libraries);
 
-        if (scriptContent != null && !scriptContent.isEmpty()) config.setScript(scriptContent);
-
-        if (threads > Runtime.getRuntime().availableProcessors()) {
-            log.warn("\n"+ConsoleUtils.formatBox("WARNING", true, Arrays.asList(
-                    "You selected more threads than your cpu has cores.",
-                    "",
-                    "I would strongly advise against it because",
-                    "it WILL make the obfuscation slower and also",
-                    "might hang up your system. " + threads + " threads > " + Runtime.getRuntime().availableProcessors() + " cores",
-                    "",
-                    "The program will resume in 10s. Please think about your decision"
-            ))+"\n");
-            Thread.sleep(10000);
+        if (scriptContent != null && !scriptContent.isEmpty()) {
+            config.setScript(scriptContent);
         }
 
         JObfImpl.INSTANCE.setThreadCount(threads);
 
         try {
             JObfImpl.INSTANCE.processJar(config);
+            return true;
         } catch (Exception e) {
-            log.error(e.getMessage(), e);
+            log.error("Error processing jar", e);
             return false;
         }
-        return true;
     }
 
-    /**
-     * Checks if a new version is available
-     *
-     * @return If the current version is up to date it will return null. If the version is outdated it will return the name of the latest version
-     */
     private static String checkForUpdate() {
         try {
-            String version = JObf.class.getPackage().getImplementationVersion();
-
-            // If the ImplementationVersion is null, the build wasn't built by maven.
-            if (version == null) return null;
-
-            InputStream inputStream = new URL("https://raw.githubusercontent.com/superblaubeere27/obfuscator/master/version").openStream();
-
-            String latestVersion = new String(ByteStreams.toByteArray(inputStream), StandardCharsets.UTF_8);
-
-            VersionComparator comparator = new VersionComparator();
-
-            if (comparator.compare(version, latestVersion) < 0) {
-                return latestVersion;
-            }
+            return new String(ByteStreams.toByteArray(new URL("https://raw.githubusercontent.com/superblaubeere27/obfuscator/master/version").openStream()), StandardCharsets.UTF_8).trim();
         } catch (Exception e) {
-            log.warn("Update check failed: " + e.getMessage());
+            log.error("Failed to check for updates", e);
+            return null;
         }
-        return null;
     }
-
 }

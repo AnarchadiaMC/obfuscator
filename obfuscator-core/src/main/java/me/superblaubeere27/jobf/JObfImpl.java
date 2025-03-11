@@ -40,10 +40,17 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.lang3.StringUtils;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ModifiedClassWriter;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FrameNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.io.ByteStreams;
-import lombok.extern.slf4j.Slf4j;
+
 import me.superblaubeere27.jobf.processors.CrasherTransformer;
-import me.superblaubeere27.jobf.processors.HWIDProtection;
 import me.superblaubeere27.jobf.processors.HideMembers;
 import me.superblaubeere27.jobf.processors.InlineTransformer;
 import me.superblaubeere27.jobf.processors.InvokeDynamic;
@@ -59,7 +66,6 @@ import me.superblaubeere27.jobf.processors.name.INameObfuscationProcessor;
 import me.superblaubeere27.jobf.processors.name.InnerClassRemover;
 import me.superblaubeere27.jobf.processors.name.NameObfuscation;
 import me.superblaubeere27.jobf.processors.optimizer.Optimizer;
-import me.superblaubeere27.jobf.processors.packager.Packager;
 import me.superblaubeere27.jobf.utils.ClassTree;
 import me.superblaubeere27.jobf.utils.MissingClassException;
 import me.superblaubeere27.jobf.utils.NameUtils;
@@ -69,14 +75,9 @@ import me.superblaubeere27.jobf.utils.scheduler.Scheduler;
 import me.superblaubeere27.jobf.utils.script.JObfScript;
 import me.superblaubeere27.jobf.utils.values.Configuration;
 import me.superblaubeere27.jobf.utils.values.ValueManager;
-import org.apache.commons.lang3.StringUtils;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ModifiedClassWriter;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FrameNode;
 
-@Slf4j(topic = "obfuscator")
 public class JObfImpl {
+    private static final Logger log = LoggerFactory.getLogger(JObfImpl.class);
     public static final JObfImpl INSTANCE = new JObfImpl();
     public static List<IClassTransformer> processors;
     public static HashMap<String, ClassNode> classes = new HashMap<>();
@@ -295,7 +296,6 @@ public class JObfImpl {
     private void addProcessors() {
         processors.add(new StaticInitializionTransformer(this));
 
-        processors.add(new HWIDProtection(this));
         processors.add(new Optimizer());
         processors.add(new InlineTransformer(this));
         processors.add(new InvokeDynamic());
@@ -460,10 +460,6 @@ public class JObfImpl {
 
             AtomicInteger processed = new AtomicInteger();
 
-            if (Packager.INSTANCE.isEnabled()) {
-                Packager.INSTANCE.init();
-            }
-
             log.info("... Finished after " + Utils.formatTime(System.currentTimeMillis() - startTime));
 
             startTime = System.currentTimeMillis();
@@ -548,51 +544,27 @@ public class JObfImpl {
 
                                     entryData = writer.toByteArray();
                                 }
-                                try {
-                                    if (Packager.INSTANCE.isEnabled()) {
-                                        entryName = Packager.INSTANCE.encryptName(entryName.replace(".class", ""));
-                                        entryData = Packager.INSTANCE.encryptClass(entryData);
-                                    }
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-
-
-//                                synchronized (finalOutJar) {
-//                                    ZipEntry newEntry = new ZipEntry(entryName);
-//                                    finalOutJar.putNextEntry(newEntry);
-//                                    finalOutJar.write(entryData);
-//                                }
 
                                 synchronized (toWrite) {
                                     toWrite.put(entryName, entryData);
                                 }
-                                //                    JObfImpl.log.log(Level.FINE, String.format("Processed %s (+%.2f KB)", entryName, (entryData.length - entryBuffer.size()) / 1024.0));
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
 
-                            //                JObfImpl.log.log(Level.FINE, "Processed " + entryBuffer.size() + " -> " + entryData.length);
-
-                            processed.getAndIncrement();
+                            processed.incrementAndGet();
                         }
-                    } finally {
-                        synchronized (threads) {
-                            threads.remove(Thread.currentThread());
-                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 });
-
+                
                 t.setName("Thread-" + i);
                 t.setContextClassLoader(ObfuscatorClassLoader.INSTANCE);
-
                 t.start();
 
-                synchronized (threads) {
-                    threads.add(t);
-                }
+                threads.add(t);
             }
-
 
             while (true) {
                 synchronized (threads) {
@@ -625,9 +597,7 @@ public class JObfImpl {
                 byte[] entryData = stringEntry.getValue();
 
                 if (entryName.equals("META-INF/MANIFEST.MF")) {
-                    if (Packager.INSTANCE.isEnabled()) {
-                        entryData = Utils.replaceMainClass(new String(entryData, StandardCharsets.UTF_8), Packager.INSTANCE.getDecryptionClassName()).getBytes(StandardCharsets.UTF_8);
-                    } else if (mainClassChanged) {
+                    if (mainClassChanged) {
                         entryData = Utils.replaceMainClass(new String(entryData, StandardCharsets.UTF_8), mainClass).getBytes(StandardCharsets.UTF_8);
                         log.info("Replaced Main-Class with " + mainClass);
                     }
@@ -643,13 +613,6 @@ public class JObfImpl {
             log.info("... Finished after " + Utils.formatTime(System.currentTimeMillis() - startTime));
 
             startTime = System.currentTimeMillis();
-
-            if (Packager.INSTANCE.isEnabled()) {
-                log.info("Packaging...");
-                writeEntry(outJar, Packager.INSTANCE.getDecryptionClassName() + ".class", Packager.INSTANCE.generateEncryptionClass(), stored);
-                outJar.closeEntry();
-                log.info("... Finished after " + Utils.formatTime(System.currentTimeMillis() - startTime));
-            }
         } catch (InterruptedException ignored) {
         } finally {
             classPath.clear();

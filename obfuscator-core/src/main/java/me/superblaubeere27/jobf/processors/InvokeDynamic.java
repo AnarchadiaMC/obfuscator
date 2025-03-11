@@ -10,6 +10,20 @@
 
 package me.superblaubeere27.jobf.processors;
 
+import java.lang.invoke.CallSite;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import org.objectweb.asm.Handle;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.Opcodes;
 import static org.objectweb.asm.Opcodes.AALOAD;
 import static org.objectweb.asm.Opcodes.ACONST_NULL;
 import static org.objectweb.asm.Opcodes.ALOAD;
@@ -33,30 +47,6 @@ import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
 import static org.objectweb.asm.Opcodes.ISTORE;
 import static org.objectweb.asm.Opcodes.NEW;
-
-import java.lang.invoke.CallSite;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
-import lombok.extern.slf4j.Slf4j;
-import me.superblaubeere27.annotations.ObfuscationTransformer;
-import me.superblaubeere27.jobf.IClassTransformer;
-import me.superblaubeere27.jobf.ProcessorCallback;
-import me.superblaubeere27.jobf.utils.NameUtils;
-import me.superblaubeere27.jobf.utils.NodeUtils;
-import me.superblaubeere27.jobf.utils.Utils;
-import me.superblaubeere27.jobf.utils.values.DeprecationLevel;
-import me.superblaubeere27.jobf.utils.values.EnabledValue;
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -69,9 +59,20 @@ import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TypeInsnNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j(topic = "obfuscator")
+import me.superblaubeere27.annotations.ObfuscationTransformer;
+import me.superblaubeere27.jobf.IClassTransformer;
+import me.superblaubeere27.jobf.ProcessorCallback;
+import me.superblaubeere27.jobf.utils.NameUtils;
+import me.superblaubeere27.jobf.utils.NodeUtils;
+import me.superblaubeere27.jobf.utils.Utils;
+import me.superblaubeere27.jobf.utils.values.DeprecationLevel;
+import me.superblaubeere27.jobf.utils.values.EnabledValue;
+
 public class InvokeDynamic implements IClassTransformer {
+    private static final Logger log = LoggerFactory.getLogger("obfuscator");
     private static final String PROCESSOR_NAME = "InvokeDynamic";
     private static Random random = new Random();
     private EnabledValue enabled = new EnabledValue(PROCESSOR_NAME, "Hides method calls", DeprecationLevel.OK, false);

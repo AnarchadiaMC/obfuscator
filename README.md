@@ -10,7 +10,6 @@ A Java bytecode obfuscator supporting
 * Deobfuscator crasher
 * String Encryption
 * Inner Class Removal
-* HWID Locking
 * Invoke Dynamic
 * Reference Proxy
 * Member Shuffling & Hiding
@@ -105,10 +104,6 @@ public class HelloWorld {
   },
   "InvokeDynamic": {
     "Enabled": true
-  },
-  "HWIDPRotection": {
-    "Enabled": false,
-    "HWID": ""
   },
   "Optimizer": {
     "Enabled": true,

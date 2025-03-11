@@ -15,12 +15,13 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.objectweb.asm.commons.Remapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import lombok.extern.slf4j.Slf4j;
 import me.superblaubeere27.jobf.utils.NameUtils;
 
-@Slf4j(topic = "obfuscator")
-class CustomRemapper extends Remapper {
+public class CustomRemapper extends Remapper {
+    private static final Logger log = LoggerFactory.getLogger("obfuscator");
     private Map<String, String> map = new HashMap<>();
     private Map<String, String> mapReversed = new HashMap<>();
     private Map<String, String> packageMap = new HashMap<>();

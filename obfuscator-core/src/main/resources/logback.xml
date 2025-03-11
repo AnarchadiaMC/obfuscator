@@ -15,10 +15,6 @@
         </encoder>
     </appender>
 
-    <!-- Form -->
-    <appender name="FORM" class="me.superblaubeere27.jobf.ui.Appender" />
-
-
     <!--
     Async appenders can drastically speed up logging as well as your application's
     response time but with some potential drawbacks. Read more at.
@@ -29,7 +25,6 @@
     application has different requirements.
      -->
     <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="FORM" />
         <appender-ref ref="CONSOLE" />
         <queueSize>1000</queueSize>
     </appender>
@@ -49,7 +44,7 @@
     <!-- Turn on debug logging connection pool. -->
     <logger name="me.superblaubeere27" level="DEBUG" />
 
-    <root level="${logging.level}">
+    <root level="DEBUG">
         <appender-ref ref="ASYNC" />
     </root>
 
