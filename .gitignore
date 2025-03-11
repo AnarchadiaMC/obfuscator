@@ -197,3 +197,5 @@ buildNumber.properties
 
 # End of https://www.gitignore.io/api/java,maven,eclipse,jetbrains+all
 /.vscode
+/obfuscator-core/target*
+/obfuscator-annotations/target*
