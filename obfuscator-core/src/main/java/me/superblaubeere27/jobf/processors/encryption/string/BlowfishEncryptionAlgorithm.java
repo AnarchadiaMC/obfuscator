@@ -16,9 +16,15 @@ import java.security.MessageDigest;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
+import me.superblaubeere27.jobf.utils.StringManipulationUtils;
+
 public class BlowfishEncryptionAlgorithm implements IStringEncryptionAlgorithm {
-    public static String decrypt(byte[] obj, byte[] key) {
+    public static String decrypt(String encryptedHex, String keyHex) {
         try {
+            // Convert hex strings back to byte arrays
+            byte[] obj = StringManipulationUtils.hexToBytes(encryptedHex);
+            byte[] key = StringManipulationUtils.hexToBytes(keyHex);
+            
             SecretKeySpec keySpec = new SecretKeySpec(MessageDigest.getInstance("MD5").digest(key), "Blowfish");
 
             Cipher des = Cipher.getInstance("Blowfish");

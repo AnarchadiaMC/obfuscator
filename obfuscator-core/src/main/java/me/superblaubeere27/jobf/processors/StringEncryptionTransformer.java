@@ -45,6 +45,7 @@ import me.superblaubeere27.jobf.processors.encryption.string.IStringEncryptionAl
 import me.superblaubeere27.jobf.processors.encryption.string.XOREncryptionAlgorithm;
 import me.superblaubeere27.jobf.utils.NameUtils;
 import me.superblaubeere27.jobf.utils.NodeUtils;
+import me.superblaubeere27.jobf.utils.StringManipulationUtils;
 import me.superblaubeere27.jobf.utils.values.BooleanValue;
 import me.superblaubeere27.jobf.utils.values.DeprecationLevel;
 import me.superblaubeere27.jobf.utils.values.EnabledValue;
@@ -254,7 +255,7 @@ public class StringEncryptionTransformer implements IClassTransformer {
                     String name;
 
                     if (!encryptionMethodMap.containsKey(processor)) {
-                        encryptionMethodMap.put(processor, name = NameUtils.generateMethodName(node, "([B[B)Ljava/lang/String;"));
+                        encryptionMethodMap.put(processor, name = NameUtils.generateMethodName(node, "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"));
                     } else {
                         name = encryptionMethodMap.get(processor);
                     }
@@ -265,21 +266,23 @@ public class StringEncryptionTransformer implements IClassTransformer {
                     toAdd.add(new FieldInsnNode(Opcodes.GETSTATIC, node.name, stringArrayName, "[Ljava/lang/String;"));
                     toAdd.add(NodeUtils.generateIntPush(j));
                     
-                    // Generate random key as byte array instead of string
+                    // Generate random key as byte array and convert to hex string
                     byte[] keyBytes = new byte[8]; // Use 8 bytes for key
                     random.nextBytes(keyBytes);
+                    String keyHex = StringManipulationUtils.bytesToHex(keyBytes);
                     
                     // Encrypt string using byte array key
                     byte[] encryptedBytes = processor.encrypt(arrayMap.get(j), keyBytes);
                     
-                    // Add bytecode to create encrypted data byte array
-                    toAdd.add(NodeUtils.generateByteArray(encryptedBytes));
+                    // Convert encrypted data to hex string
+                    String encryptedHex = StringManipulationUtils.bytesToHex(encryptedBytes);
                     
-                    // Add bytecode to create key byte array
-                    toAdd.add(NodeUtils.generateByteArray(keyBytes));
+                    // Add the encrypted hex string and key hex string as string constants
+                    toAdd.add(new LdcInsnNode(encryptedHex));
+                    toAdd.add(new LdcInsnNode(keyHex));
                     
-                    // Call decrypt method with both byte arrays
-                    toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, node.name, name, "([B[B)Ljava/lang/String;", false));
+                    // Call decrypt method with both hex strings
+                    toAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, node.name, name, "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false));
 
                     toAdd.add(new InsnNode(Opcodes.AASTORE));
                 }

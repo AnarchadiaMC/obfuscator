@@ -40,4 +40,36 @@ public class StringManipulationUtils
             stringBuilder.append((char) random.nextInt(255));
         return stringBuilder.toString();
     }
+
+    /**
+     * Converts a byte array to a hex string representation
+     * @param bytes The byte array to convert
+     * @return Hex string representation
+     */
+    public static String bytesToHex(byte[] bytes) {
+        StringBuilder hexString = new StringBuilder(2 * bytes.length);
+        for (byte b : bytes) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString();
+    }
+
+    /**
+     * Converts a hex string back to a byte array
+     * @param hexString The hex string to convert
+     * @return The converted byte array
+     */
+    public static byte[] hexToBytes(String hexString) {
+        int len = hexString.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(hexString.charAt(i), 16) << 4)
+                    + Character.digit(hexString.charAt(i + 1), 16));
+        }
+        return data;
+    }
 }
