@@ -19,65 +19,56 @@ import me.superblaubeere27.jobf.processors.encryption.string.AESEncryptionAlgori
 import me.superblaubeere27.jobf.processors.encryption.string.BlowfishEncryptionAlgorithm;
 import me.superblaubeere27.jobf.processors.encryption.string.DESEncryptionAlgorithm;
 import me.superblaubeere27.jobf.processors.encryption.string.XOREncryptionAlgorithm;
-import me.superblaubeere27.jobf.utils.StringManipulationUtils;
 
 public class CipherTest {
 
     @Test
     public void testDES() {
         String encrypt = "Encryption works.";
-        byte[] keyBytes = "123456 is a safe key".getBytes(StandardCharsets.UTF_8);
-        String keyHex = StringManipulationUtils.bytesToHex(keyBytes);
+        byte[] key = "123456 is a safe key".getBytes(StandardCharsets.UTF_8);
 
         DESEncryptionAlgorithm algorithm = new DESEncryptionAlgorithm();
 
-        byte[] encBytes = algorithm.encrypt(encrypt, keyBytes);
-        String encHex = StringManipulationUtils.bytesToHex(encBytes);
+        byte[] enc = algorithm.encrypt(encrypt, key);
 
-        assertEquals(encrypt, DESEncryptionAlgorithm.decrypt(encHex, keyHex));
+        assertEquals(encrypt, DESEncryptionAlgorithm.decrypt(enc, key));
     }
 
 
     @Test
     public void testXOR() {
         String encrypt = "Encryption works.";
-        byte[] keyBytes = "123456 is a safe key".getBytes(StandardCharsets.UTF_8);
-        String keyHex = StringManipulationUtils.bytesToHex(keyBytes);
+        byte[] key = "123456 is a safe key".getBytes(StandardCharsets.UTF_8);
 
         XOREncryptionAlgorithm algorithm = new XOREncryptionAlgorithm();
 
-        byte[] encBytes = algorithm.encrypt(encrypt, keyBytes);
-        String encHex = StringManipulationUtils.bytesToHex(encBytes);
+        byte[] enc = algorithm.encrypt(encrypt, key);
 
-        assertEquals(encrypt, XOREncryptionAlgorithm.decrypt(encHex, keyHex));
+        assertEquals(encrypt, XOREncryptionAlgorithm.decrypt(enc, key));
     }
 
     @Test
     public void testAES() {
         String encrypt = "Encryption works.";
-        byte[] keyBytes = "123456 is a safe key".getBytes(StandardCharsets.UTF_8);
-        String keyHex = StringManipulationUtils.bytesToHex(keyBytes);
+        byte[] key = "123456 is a safe key".getBytes(StandardCharsets.UTF_8);
 
         AESEncryptionAlgorithm algorithm = new AESEncryptionAlgorithm();
 
-        byte[] encBytes = algorithm.encrypt(encrypt, keyBytes);
-        String encHex = StringManipulationUtils.bytesToHex(encBytes);
+        byte[] enc = algorithm.encrypt(encrypt, key);
 
-        assertEquals(encrypt, AESEncryptionAlgorithm.decrypt(encHex, keyHex));
+        assertEquals(encrypt, AESEncryptionAlgorithm.decrypt(enc, key));
     }
 
     @Test
     public void testBlowfish() {
         String encrypt = "Encryption works.";
-        byte[] keyBytes = "123456 is a safe key".getBytes(StandardCharsets.UTF_8);
-        String keyHex = StringManipulationUtils.bytesToHex(keyBytes);
+        byte[] key = "123456 is a safe key".getBytes(StandardCharsets.UTF_8);
 
         BlowfishEncryptionAlgorithm algorithm = new BlowfishEncryptionAlgorithm();
 
-        byte[] encBytes = algorithm.encrypt(encrypt, keyBytes);
-        String encHex = StringManipulationUtils.bytesToHex(encBytes);
+        byte[] enc = algorithm.encrypt(encrypt, key);
 
-        assertEquals(encrypt, BlowfishEncryptionAlgorithm.decrypt(encHex, keyHex));
+        assertEquals(encrypt, BlowfishEncryptionAlgorithm.decrypt(enc, key));
     }
 
 }

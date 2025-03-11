@@ -12,15 +12,9 @@ package me.superblaubeere27.jobf.processors.encryption.string;
 
 import java.nio.charset.StandardCharsets;
 
-import me.superblaubeere27.jobf.utils.StringManipulationUtils;
-
 public class XOREncryptionAlgorithm implements IStringEncryptionAlgorithm {
 
-    public static String decrypt(String encryptedHex, String keyHex) {
-        // Convert hex strings back to byte arrays
-        byte[] objBytes = StringManipulationUtils.hexToBytes(encryptedHex);
-        byte[] key = StringManipulationUtils.hexToBytes(keyHex);
-        
+    public static String decrypt(byte[] objBytes, byte[] key) {
         byte[] result = new byte[objBytes.length];
         
         for (int i = 0; i < objBytes.length; i++) {

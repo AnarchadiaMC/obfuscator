@@ -12,14 +12,6 @@ package me.superblaubeere27.jobf.processors.encryption.string;
 
 public interface IStringEncryptionAlgorithm {
 
-    /**
-     * Encrypt a string using the specified key bytes
-     * The implementation should return raw bytes that will be converted to hex string by the transformer
-     * 
-     * @param obj The string to encrypt
-     * @param key The encryption key as bytes
-     * @return The encrypted data as bytes
-     */
     byte[] encrypt(String obj, byte[] key);
 
 }
