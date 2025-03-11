@@ -46,7 +46,7 @@ ShuffleMembers:
   Enabled: true
 InnerClassRemover:
   Enabled: true
-  Remap: false
+  Remap: true
   Remove Metadata: true
 NameObfuscation:
   Enabled: true
@@ -60,18 +60,18 @@ NameObfuscation:
 HideMembers:
   Enabled: true
 Inlining:
-  Enabled: false
+  Enabled: true
 FlowObfuscator:
-  Enabled: false
-  Mangle Switches: false
-  Mangle Return: false
-  Replace GOTO: false
-  Replace If: false
-  Bad POP: false
-  Bad Concat: false
-  Mangle Local Variables: false
+  Enabled: true
+  Mangle Switches: true
+  Mangle Return: true
+  Replace GOTO: true
+  Replace If: true
+  Bad POP: true
+  Bad Concat: true
+  Mangle Local Variables: true
 General Settings:
   Generator characters: "·•⋅∙◦⚫⦁⸰⸱⸳᛫‧․⋯⁘⁙⁚⁛⁜⟡⟐⊙"
   Custom dictionary: true
   Name dictionary: "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,а,ɑ,е,é,о,ο,р,ρ,с,σ,х,χ,у,υ,ј,і,ӏ,ᅠ"
-  Use STORE instead of DEFLATE: false 
+  Use STORE instead of DEFLATE: false
