@@ -32,17 +32,17 @@
         </repository>
     </repositories>
     <properties>
-        <slf4j-api.version>1.7.30</slf4j-api.version>
-        <logback-classic.version>1.2.3</logback-classic.version>
-        <guava.version>29.0-jre</guava.version>
+        <slf4j-api.version>2.0.9</slf4j-api.version>
+        <logback-classic.version>1.4.11</logback-classic.version>
+        <guava.version>32.1.2-jre</guava.version>
         <jopt-simple.version>5.0.4</jopt-simple.version>
-        <gson.version>2.8.2</gson.version>
-        <junit.version>4.13.1</junit.version>
-        <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
-        <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
+        <gson.version>2.10.1</gson.version>
+        <junit.version>4.13.2</junit.version>
+        <maven-shade-plugin.version>3.5.1</maven-shade-plugin.version>
+        <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
         <jcp.version>6.1.4</jcp.version>
-        <commons-lang3.version>3.11</commons-lang3.version>
-        <nashorn.version>15.2</nashorn.version>
+        <commons-lang3.version>3.13.0</commons-lang3.version>
+        <nashorn.version>15.6</nashorn.version>
     </properties>
 
     <dependencies>
@@ -126,8 +126,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <source>15</source>
-                    <target>15</target>
+                    <source>21</source>
+                    <target>21</target>
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
@@ -148,6 +148,7 @@
                                     <mainClass>me.superblaubeere27.jobf.JObf</mainClass>
                                 </transformer>
                             </transformers>
+                            <outputFile>${project.basedir}/../Output/obfuscator.jar</outputFile>
                         </configuration>
                     </execution>
                 </executions>

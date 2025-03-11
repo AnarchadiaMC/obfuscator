@@ -10,24 +10,45 @@
 
 package me.superblaubeere27.jobf.processors;
 
+import java.io.IOException;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import org.objectweb.asm.Label;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.LabelNode;
+import org.objectweb.asm.tree.LdcInsnNode;
+import org.objectweb.asm.tree.LineNumberNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.TypeInsnNode;
+import org.objectweb.asm.tree.VarInsnNode;
+
 import me.superblaubeere27.annotations.ObfuscationTransformer;
 import me.superblaubeere27.jobf.IClassTransformer;
 import me.superblaubeere27.jobf.JObfImpl;
 import me.superblaubeere27.jobf.ProcessorCallback;
-import me.superblaubeere27.jobf.processors.encryption.string.*;
+import me.superblaubeere27.jobf.processors.encryption.string.AESEncryptionAlgorithm;
+import me.superblaubeere27.jobf.processors.encryption.string.BlowfishEncryptionAlgorithm;
+import me.superblaubeere27.jobf.processors.encryption.string.DESEncryptionAlgorithm;
+import me.superblaubeere27.jobf.processors.encryption.string.IStringEncryptionAlgorithm;
+import me.superblaubeere27.jobf.processors.encryption.string.XOREncryptionAlgorithm;
 import me.superblaubeere27.jobf.utils.NameUtils;
 import me.superblaubeere27.jobf.utils.NodeUtils;
 import me.superblaubeere27.jobf.utils.StringManipulationUtils;
 import me.superblaubeere27.jobf.utils.values.BooleanValue;
 import me.superblaubeere27.jobf.utils.values.DeprecationLevel;
 import me.superblaubeere27.jobf.utils.values.EnabledValue;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.*;
-
-import java.io.IOException;
-import java.lang.reflect.Modifier;
-import java.util.*;
 
 public class StringEncryptionTransformer implements IClassTransformer {
     public static final String MAGICNUMBER_START = "\u00e4";

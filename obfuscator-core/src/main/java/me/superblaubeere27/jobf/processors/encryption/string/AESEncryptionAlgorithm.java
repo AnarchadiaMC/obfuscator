@@ -10,11 +10,12 @@
 
 package me.superblaubeere27.jobf.processors.encryption.string;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Base64;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 
 @Deprecated
 public class AESEncryptionAlgorithm implements IStringEncryptionAlgorithm {

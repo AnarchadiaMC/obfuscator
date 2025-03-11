@@ -1,0 +1,86 @@
+{
+  "libraries": [
+  ],
+  "script": "function isRemappingEnabledForClass(node) {\n    return true;\n}\nfunction isObfuscatorEnabledForClass(node) {\n    return true;\n}",
+  "Crasher": {
+    "Enabled": true,
+    "Invalid Signatures": true,
+    "Empty annotation spam": true
+  },
+  "InvokeDynamic": {
+    "Enabled": true
+  },
+  "Optimizer": {
+    "Enabled": true,
+    "Replace String.equals()": true,
+    "Replace String.equalsIgnoreCase()": true,
+    "Optimize static string calls": true
+  },
+  "LineNumberRemover": {
+    "Enabled": true,
+    "Rename local variables": true,
+    "Remove Line Numbers": true,
+    "Remove Debug Names": true,
+    "Add Local Variables": true,
+    "New SourceFile Name": "Obfuscated.java"
+  },
+  "StringEncryption": {
+    "Enabled": true,
+    "HideStrings": true,
+    "AES": true
+  },
+  "NumberObfuscation": {
+    "Enabled": true,
+    "Extract to Array": true,
+    "Obfuscate Zero": true,
+    "Shift": true,
+    "And": true,
+    "Multiple Instructions": true
+  },
+  "ReferenceProxy": {
+    "Enabled": true
+  },
+  "PeepholeOptimizer": {
+    "Enabled": true,
+    "Experimental Pop folding": true
+  },
+  "ShuffleMembers": {
+    "Enabled": true
+  },
+  "InnerClassRemover": {
+    "Enabled": true,
+    "Remap": true,
+    "Remove Metadata": true
+  },
+  "NameObfuscation": {
+    "Enabled": true,
+    "Excluded classes": "",
+    "Excluded methods": "",
+    "Excluded fields": "",
+    "Package": true,
+    "New Packages": "batman",
+    "Accept Missing Libraries": true
+  },
+  "HideMembers": {
+    "Enabled": true
+  },
+  "Inlining": {
+    "Enabled": true
+  },
+  "FlowObfuscator": {
+    "Enabled": true,
+    "Mangle Switches": true,
+    "Mangle Return": true,
+    "Replace GOTO": true,
+    "Replace If": true,
+    "Bad POP": true,
+    "Bad Concat": true,
+    "Mangle Local Variables": true
+  },
+  "General Settings": {
+    "Generator characters": "·•⋅∙◦⚫⦁⸰⸱⸳᛫‧․⋯⁘⁙⁚⁛⁜⟡⟐⊙",
+    "Custom dictionary": true,
+    "Name dictionary": "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,а,ɑ,е,é,о,ο,р,ρ,с,σ,х,χ,у,υ,ј,і,ӏ,ᅠ",
+    "Use STORE instead of DEFLATE": false
+  }
+} 

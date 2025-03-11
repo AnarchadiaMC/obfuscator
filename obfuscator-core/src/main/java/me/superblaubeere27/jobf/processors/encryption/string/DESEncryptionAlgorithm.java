@@ -10,12 +10,13 @@
 
 package me.superblaubeere27.jobf.processors.encryption.string;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Base64;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 
 public class DESEncryptionAlgorithm implements IStringEncryptionAlgorithm {
     public static String decrypt(String obj, String key) {

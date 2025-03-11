@@ -10,23 +10,44 @@
 
 package me.superblaubeere27;
 
-import com.google.common.io.Files;
-import me.superblaubeere27.jobf.JObfImpl;
-import me.superblaubeere27.jobf.processors.flowObfuscation.FlowObfuscator;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.ModifiedClassWriter;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.*;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.LabelNode;
+import org.objectweb.asm.tree.LdcInsnNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.TypeInsnNode;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import com.google.common.io.Files;
+
+import me.superblaubeere27.jobf.JObfImpl;
+import me.superblaubeere27.jobf.processors.flowObfuscation.FlowObfuscator;
 
 public class JumpTest {
     private Class<?> generatedClass = null;
+
+    /**
+     * A custom ClassLoader that exposes the protected defineClass method.
+     */
+    private static class ByteClassLoader extends ClassLoader {
+        public ByteClassLoader(ClassLoader parent) {
+            super(parent);
+        }
+
+        public Class<?> defineClass(String name, byte[] bytes) {
+            return defineClass(name, bytes, 0, bytes.length);
+        }
+    }
 
     @Before
     public void generateClass() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, ClassNotFoundException, IOException {
@@ -73,12 +94,9 @@ public class JumpTest {
 
         Files.write(bytes, File.createTempFile("JumpTestClass", ".class"));
 
-        Class<?> classLoaderClass = ClassLoader.class;
-
-        Method defineClass = classLoaderClass.getDeclaredMethod("defineClass", byte[].class, int.class, int.class);
-        defineClass.setAccessible(true);
-
-        generatedClass = (Class) defineClass.invoke(getClass().getClassLoader(), bytes, 0, bytes.length);
+        // Use our custom class loader instead of reflection
+        ByteClassLoader byteClassLoader = new ByteClassLoader(getClass().getClassLoader());
+        generatedClass = byteClassLoader.defineClass("Test", bytes);
     }
 
     @Test
