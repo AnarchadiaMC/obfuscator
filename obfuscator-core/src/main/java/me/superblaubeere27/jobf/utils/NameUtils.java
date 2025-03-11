@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -235,19 +236,58 @@ public class NameUtils {
 
         try {
             if (usingCustomDictionary) {
-                classNames = Files.readLines(new File(settings.getClassNameDictionary().getObject()), StandardCharsets.UTF_8);
-                names = Files.readLines(new File(settings.getNameDictionary().getObject()), StandardCharsets.UTF_8);
+                String classNameDictPath = settings.getClassNameDictionary().getObject();
+                String nameDictPath = settings.getNameDictionary().getObject();
+                
+                // Check if both dictionary paths are valid before attempting to load
+                File classNameFile = new File(classNameDictPath);
+                File nameFile = new File(nameDictPath);
+                
+                if (!classNameFile.exists() || !nameFile.exists() || 
+                    classNameDictPath.trim().isEmpty() || nameDictPath.trim().isEmpty()) {
+                    
+                    System.out.println("WARNING: Custom dictionary enabled but dictionary files not found.");
+                    System.out.println("Using Name dictionary contents as direct input instead of file paths.");
+                    
+                    // Use the dictionary content directly if it contains commas (suggesting a list)
+                    if (nameDictPath.contains(",")) {
+                        names = new ArrayList<>(Arrays.asList(nameDictPath.split(",")));
+                    }
+                    if (classNameDictPath.contains(",")) {
+                        classNames = new ArrayList<>(Arrays.asList(classNameDictPath.split(",")));
+                    }
+                    
+                    // If we have content, keep custom dictionary enabled; otherwise disable it
+                    if (names.isEmpty() && classNames.isEmpty()) {
+                        System.out.println("No valid dictionary content found. Disabling custom dictionary.");
+                        usingCustomDictionary = false;
+                    }
+                } else {
+                    // Load from files as originally intended
+                    classNames = Files.readLines(classNameFile, StandardCharsets.UTF_8);
+                    names = Files.readLines(nameFile, StandardCharsets.UTF_8);
+                }
             }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to load names: " + e.getLocalizedMessage(), e);
+            System.out.println("Failed to load dictionary files: " + e.getMessage());
+            System.out.println("Disabling custom dictionary due to error.");
+            usingCustomDictionary = false;
         }
     }
 
     public static void cleanUp() {
-        classNames.clear();
+        try {
+            classNames.clear();
+        } catch (UnsupportedOperationException e) {
+            // If the list is immutable, create a new one instead
+        }
         classNames = new ArrayList<>();
 
-        names.clear();
+        try {
+            names.clear();
+        } catch (UnsupportedOperationException e) {
+            // If the list is immutable, create a new one instead
+        }
         names = new ArrayList<>();
         chars = "-_|";
     }
