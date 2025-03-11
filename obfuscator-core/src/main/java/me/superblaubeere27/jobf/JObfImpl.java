@@ -95,6 +95,7 @@ public class JObfImpl {
     private boolean invokeDynamic;
     private final JObfSettings settings = new JObfSettings();
     private int threadCount = Math.max(1, Runtime.getRuntime().availableProcessors());
+    private final Map<String, String> classRenameMappings = new HashMap<>();
 
 
     public JObfImpl() {
@@ -105,7 +106,7 @@ public class JObfImpl {
         addProcessors();
     }
 
-    public static HashMap<String, ClassNode> getClasses() {
+    public static Map<String, ClassNode> getClasses() {
         return classes;
     }
 
@@ -435,7 +436,31 @@ public class JObfImpl {
 
                 } else {
                     if (entryName.equals("META-INF/MANIFEST.MF")) {
-                        setMainClass(Utils.getMainClass(new String(entryData, StandardCharsets.UTF_8)));
+                        // Check if the main class has been renamed
+                        String originalMainClass = Utils.getMainClass(new String(entryData, StandardCharsets.UTF_8));
+                        
+                        if (originalMainClass != null && !originalMainClass.isEmpty()) {
+                            // Convert dots to slashes in the class name for internal format
+                            String internalClassName = originalMainClass.replace('.', '/');
+                            
+                            // Check if this class was renamed
+                            if (classRenameMappings.containsKey(internalClassName)) {
+                                // Get the new name and convert slashes back to dots for the manifest
+                                String newName = classRenameMappings.get(internalClassName);
+                                mainClass = newName.replace('/', '.');
+                                mainClassChanged = true;
+                                log.info("Main class has been renamed from " + originalMainClass + " to " + mainClass);
+                            } else {
+                                log.warn("Original main class " + originalMainClass + " not found in rename mappings. The JAR may not be executable.");
+                            }
+                        }
+                        
+                        if (mainClassChanged) {
+                            entryData = Utils.replaceMainClass(new String(entryData, StandardCharsets.UTF_8), mainClass).getBytes(StandardCharsets.UTF_8);
+                            log.info("Replaced Main-Class with " + mainClass);
+                        }
+
+                        log.info("Processed MANIFEST.MF");
                     }
 
                     files.put(entryName, entryData);
@@ -597,6 +622,25 @@ public class JObfImpl {
                 byte[] entryData = stringEntry.getValue();
 
                 if (entryName.equals("META-INF/MANIFEST.MF")) {
+                    // Check if the main class has been renamed
+                    String originalMainClass = Utils.getMainClass(new String(entryData, StandardCharsets.UTF_8));
+                    
+                    if (originalMainClass != null && !originalMainClass.isEmpty()) {
+                        // Convert dots to slashes in the class name for internal format
+                        String internalClassName = originalMainClass.replace('.', '/');
+                        
+                        // Check if this class was renamed
+                        if (classRenameMappings.containsKey(internalClassName)) {
+                            // Get the new name and convert slashes back to dots for the manifest
+                            String newName = classRenameMappings.get(internalClassName);
+                            mainClass = newName.replace('/', '.');
+                            mainClassChanged = true;
+                            log.info("Main class has been renamed from " + originalMainClass + " to " + mainClass);
+                        } else {
+                            log.warn("Original main class " + originalMainClass + " not found in rename mappings. The JAR may not be executable.");
+                        }
+                    }
+                    
                     if (mainClassChanged) {
                         entryData = Utils.replaceMainClass(new String(entryData, StandardCharsets.UTF_8), mainClass).getBytes(StandardCharsets.UTF_8);
                         log.info("Replaced Main-Class with " + mainClass);
@@ -605,7 +649,6 @@ public class JObfImpl {
                     log.info("Processed MANIFEST.MF");
                 }
                 log.info("Copying " + entryName);
-
 
                 writeEntry(outJar, entryName, entryData, stored);
             }
@@ -673,4 +716,13 @@ public class JObfImpl {
         this.threadCount = threadCount;
     }
 
+    /**
+     * Register a class renaming from original name to new name
+     * @param originalName Original class name with slashes (e.g., org/example/Main)
+     * @param newName New class name with slashes (e.g., a/b/C)
+     */
+    public void registerClassRename(String originalName, String newName) {
+        classRenameMappings.put(originalName, newName);
+        log.info("Registered class rename: " + originalName + " -> " + newName);
+    }
 }

@@ -10,14 +10,20 @@
 
 package me.superblaubeere27.jobf.utils;
 
-import com.google.common.io.Files;
-import me.superblaubeere27.jobf.JObfSettings;
-import org.objectweb.asm.tree.ClassNode;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import org.objectweb.asm.tree.ClassNode;
+
+import com.google.common.io.Files;
+
+import me.superblaubeere27.jobf.JObfSettings;
 
 public class NameUtils {
     /**
@@ -70,8 +76,16 @@ public class NameUtils {
         int id = packageMap.get(packageName);
         packageMap.put(packageName, id + 1);
 
-        return getName(classNames, id);
-//        return ClassNameGenerator.className(Utils.random(2, 5));
+        // Generate a random Unicode string of length 5-10 characters
+        // Use a valid Java identifier for the first character (ensuring it's a letter)
+        char firstChar = (char) ('A' + random.nextInt(26));
+        String uniqueId = firstChar + unicodeString(4 + random.nextInt(6));
+        
+        // Add a unique identifier based on ID to avoid collisions
+        return uniqueId + "_" + id;
+        
+        // Old implementation:
+        // return getName(classNames, id);
     }
 
     private static String getName(List<String> dictionary, int id) {
@@ -158,7 +172,29 @@ public class NameUtils {
     public static String unicodeString(int length) {
         StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < length; i++) {
-            stringBuilder.append((char) randInt(128, 250));
+            // Choose from several Unicode ranges that are valid for Java identifiers
+            // and that will produce confusing/hard-to-read names
+            int choice = random.nextInt(5);
+            char c;
+            
+            switch (choice) {
+                case 0: // Latin-1 Supplement
+                    c = (char) randInt(0x00C0, 0x00FF);
+                    break;
+                case 1: // Greek and Coptic
+                    c = (char) randInt(0x0370, 0x03FF);
+                    break;
+                case 2: // Cyrillic
+                    c = (char) randInt(0x0400, 0x04FF);
+                    break;
+                case 3: // CJK Unified Ideographs (Common Chinese/Japanese/Korean)
+                    c = (char) randInt(0x4E00, 0x9FFF);
+                    break;
+                default: // Mathematical Alphanumeric Symbols
+                    c = (char) randInt(0x1D400, 0x1D7FF);
+                    break;
+            }
+            stringBuilder.append(c);
         }
         return stringBuilder.toString();
     }
