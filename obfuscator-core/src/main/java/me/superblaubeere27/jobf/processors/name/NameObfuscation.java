@@ -65,7 +65,7 @@ public class NameObfuscation implements INameObfuscationProcessor {
             
             // Handle the case where the package name might be empty or null
             if (packageValue == null || packageValue.trim().isEmpty()) {
-                log.warn("Package name is empty, defaulting to 'org.obfuscated'");
+                log.warn("Package name is empty, will use 'org.obfuscated' as fallback for internal processing");
                 packageValue = "org.obfuscated";
             }
             
@@ -85,11 +85,11 @@ public class NameObfuscation implements INameObfuscationProcessor {
             if (!packageNames.isEmpty()) {
                 String testPackage = packageNames.get(0);
                 if (testPackage.isEmpty()) {
-                    log.warn("First package name is empty, defaulting to 'org.obfuscated'");
+                    log.warn("First package name is empty, will use 'org.obfuscated' for internal processing");
                     packageNames = Arrays.asList("org.obfuscated");
                 }
             } else {
-                log.warn("No package names were found, defaulting to 'org.obfuscated'");
+                log.warn("No package names were found, will use 'org.obfuscated' for internal processing");
                 packageNames = Arrays.asList("org.obfuscated");
             }
         }
@@ -132,8 +132,8 @@ public class NameObfuscation implements INameObfuscationProcessor {
                 log.info("Selecting random package from packageNames");
                 retVal = packageNames.get(random.nextInt(packageNames.size()));
             } else {
-                log.warn("No package names found, using hardcoded fallback org/batman/");
-                return "org/batman/";
+                log.warn("No package names found, using default fallback 'org.obfuscated'");
+                return "org/obfuscated/";
             }
             
             log.info("Selected package before processing: '" + retVal + "'");
@@ -314,26 +314,27 @@ public class NameObfuscation implements INameObfuscationProcessor {
 
                 String newClassName;
                 
-                // FORCE USING org.batman PACKAGE FOR TESTING
-                if (true) { // Always execute this block for testing
-                    log.info("FORCING org.batman package for unprocessed class: " + classWrapper.originalName);
-                    newClassName = "org/batman/" + NameUtils.generateClassName();
-                } else if (usePackageHierarchy) {
-                    // Preserve package hierarchy but obfuscate class name
-                    String packagePath = "";
-                    String className = classWrapper.originalName;
-                    
-                    int lastSlashIndex = className.lastIndexOf('/');
-                    if (lastSlashIndex != -1) {
-                        packagePath = className.substring(0, lastSlashIndex + 1);
-                        className = className.substring(lastSlashIndex + 1);
+                if (shouldPackage.getObject()) {
+                    if (preservePackageHierarchy.getObject()) {
+                        // Preserve package hierarchy but obfuscate class name
+                        String packagePath = "";
+                        String className = classWrapper.originalName;
+                        
+                        int lastSlashIndex = className.lastIndexOf('/');
+                        if (lastSlashIndex != -1) {
+                            packagePath = className.substring(0, lastSlashIndex + 1);
+                            className = className.substring(lastSlashIndex + 1);
+                        }
+                        
+                        // Generate a random class name but keep it in the same package
+                        newClassName = packagePath + NameUtils.generateClassName();
+                    } else {
+                        // Use configured package
+                        newClassName = getPackageName() + NameUtils.generateClassName();
                     }
-                    
-                    // Generate a random class name but keep it in the same package
-                    newClassName = packagePath + NameUtils.generateClassName();
                 } else {
-                    // Use configured package or no package based on settings
-                    newClassName = getPackageName() + NameUtils.generateClassName();
+                    // Don't use package
+                    newClassName = NameUtils.generateClassName();
                 }
                 
                 log.info("Renaming class: " + classWrapper.originalName + " to " + newClassName);
@@ -406,32 +407,20 @@ public class NameObfuscation implements INameObfuscationProcessor {
     }
 
     private void debugCurrentValues() {
-        log.info("-------------------------");
-        log.info("DEBUG NAME OBFUSCATION SETTINGS");
-        log.info("  Enabled: " + enabled.getObject());
-        log.info("  Package: " + shouldPackage.getObject());
-        log.info("  New Packages: '" + newPackage.getObject() + "'");
-        log.info("  Preserve Package Hierarchy: " + preservePackageHierarchy.getObject());
-        log.info("  Accept Missing Libraries: " + acceptMissingLibraries.getObject());
-        
-        // FORCE PACKAGE TO TRUE FOR TESTING
-        shouldPackage.setObject(true);
-        
-        // Try to force default values
-        if (shouldPackage.getObject() && (newPackage.getObject() == null || newPackage.getObject().trim().isEmpty())) {
-            log.warn("New Packages value is empty but Package is enabled. Setting default value.");
-            newPackage.setObject("org.obfuscated");
-        }
-        
-        // ENSURE NEW PACKAGES HAS A VALUE
-        if (newPackage.getObject() == null || newPackage.getObject().trim().isEmpty()) {
-            log.warn("New Packages value is empty. Force setting to org.batman");
-            newPackage.setObject("org.batman");
-        }
-        
-        log.info("  Updated Package: " + shouldPackage.getObject());
-        log.info("  Updated New Packages: '" + newPackage.getObject() + "'");
-        log.info("-------------------------");
+        log.info("==== NameObfuscation Configuration ====");
+        log.info("Enabled: {}", enabled.getObject());
+        log.info("Should Package: {}", shouldPackage.getObject());
+        log.info("New Package: '{}'", newPackage.getObject());
+        log.info("Preserve Package Hierarchy: {}", preservePackageHierarchy.getObject());
+        log.info("Excluded Classes: {} patterns", excludedClassesPatterns.size());
+        log.info("Excluded Methods: {} patterns", excludedMethodsPatterns.size());
+        log.info("Excluded Fields: {} patterns", excludedFieldsPatterns.size());
+        log.info("Accept Missing Libraries: {}", acceptMissingLibraries.getObject());
+        log.info("Raw Value Objects:");
+        log.info("  shouldPackage = {}", shouldPackage);
+        log.info("  newPackage = {}", newPackage);
+        log.info("  preservePackageHierarchy = {}", preservePackageHierarchy);
+        log.info("=======================================");
     }
 
     private Pattern compileExcludePattern(String s) {
@@ -628,26 +617,27 @@ public class NameObfuscation implements INameObfuscationProcessor {
             // Generate new class name based on settings
             String newClassName;
             
-            // FORCE USING org.batman PACKAGE FOR TESTING
-            if (true) { // Always execute this block for testing
-                log.info("FORCING org.batman package for unprocessed class: " + classWrapper.originalName);
-                newClassName = "org/batman/" + NameUtils.generateClassName();
-            } else if (usePackageHierarchy) {
-                // Preserve package hierarchy but obfuscate class name
-                String packagePath = "";
-                String className = classWrapper.originalName;
-                
-                int lastSlashIndex = className.lastIndexOf('/');
-                if (lastSlashIndex != -1) {
-                    packagePath = className.substring(0, lastSlashIndex + 1);
-                    className = className.substring(lastSlashIndex + 1);
+            if (shouldPackage.getObject()) {
+                if (preservePackageHierarchy.getObject()) {
+                    // Preserve package hierarchy but obfuscate class name
+                    String packagePath = "";
+                    String className = classWrapper.originalName;
+                    
+                    int lastSlashIndex = className.lastIndexOf('/');
+                    if (lastSlashIndex != -1) {
+                        packagePath = className.substring(0, lastSlashIndex + 1);
+                        className = className.substring(lastSlashIndex + 1);
+                    }
+                    
+                    // Generate a random class name but keep it in the same package
+                    newClassName = packagePath + NameUtils.generateClassName();
+                } else {
+                    // Use configured package
+                    newClassName = getPackageName() + NameUtils.generateClassName();
                 }
-                
-                // Generate a random class name but keep it in the same package
-                newClassName = packagePath + NameUtils.generateClassName();
             } else {
-                // Use configured package or no package based on settings
-                newClassName = getPackageName() + NameUtils.generateClassName();
+                // Don't use package
+                newClassName = NameUtils.generateClassName();
             }
             
             log.info("Directly renaming class (no hierarchy): " + classWrapper.originalName + " to " + newClassName);

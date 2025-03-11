@@ -1,0 +1,3 @@
+NameObfuscation:
+  Package: true
+  New Packages: org.batman 

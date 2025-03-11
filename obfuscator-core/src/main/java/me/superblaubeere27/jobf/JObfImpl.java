@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -96,14 +97,18 @@ public class JObfImpl {
     private final JObfSettings settings = new JObfSettings();
     private int threadCount = Math.max(1, Runtime.getRuntime().availableProcessors());
     private final Map<String, String> classRenameMappings = new HashMap<>();
+    private Random random;
 
-
-    public JObfImpl() {
+    private JObfImpl() {
+        this.random = new Random();
+        this.threadCount = Runtime.getRuntime().availableProcessors();
+        
+        // Initialize processors
         processors = new ArrayList<>();
-
-        ValueManager.registerClass(settings);
-
+        log.info("Initializing processors early to register with ValueManager...");
         addProcessors();
+        
+        log.info("JObfImpl initialized successfully");
     }
 
     public static Map<String, ClassNode> getClasses() {
@@ -295,6 +300,7 @@ public class JObfImpl {
     }
 
     private void addProcessors() {
+        log.info("Initializing processors...");
         processors.add(new StaticInitializionTransformer(this));
 
         processors.add(new Optimizer());
@@ -316,15 +322,24 @@ public class JObfImpl {
 
         preProcessors = new ArrayList<>();
 
+        log.info("Registering processors with ValueManager...");
+        // Register all processors with the ValueManager
         for (IClassTransformer processor : processors) {
             ValueManager.registerClass(processor);
+            log.debug("Registered processor: {}", processor.getClass().getSimpleName());
         }
         for (IPreClassTransformer processor : preProcessors) {
             ValueManager.registerClass(processor);
+            log.debug("Registered pre-processor: {}", processor.getClass().getSimpleName());
         }
         for (INameObfuscationProcessor processor : nameObfuscationProcessors) {
             ValueManager.registerClass(processor);
+            log.debug("Registered name obfuscation processor: {}", processor.getClass().getSimpleName());
         }
+        
+        // Debug: dump all registered values
+        ValueManager.dumpRegisteredValues();
+        log.info("All processors initialized and registered");
     }
 
     public void setScript(JObfScript script) {
@@ -332,6 +347,7 @@ public class JObfImpl {
     }
 
     public void processJar(Configuration config) throws IOException {
+        log.info("Starting JAR processing with configuration...");
         ZipInputStream inJar = null;
         ZipOutputStream outJar = null;
 
@@ -345,6 +361,7 @@ public class JObfImpl {
         files = new HashMap<>();
         hierarchy = new HashMap<>();
 
+        log.info("Applying settings to name utils...");
         NameUtils.applySettings(settings);
         NameUtils.setup();
 

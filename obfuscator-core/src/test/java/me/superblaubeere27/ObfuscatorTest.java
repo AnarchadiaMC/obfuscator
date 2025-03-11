@@ -10,14 +10,6 @@
 
 package me.superblaubeere27;
 
-import com.google.common.io.ByteStreams;
-import me.superblaubeere27.jobf.JObfImpl;
-import me.superblaubeere27.jobf.utils.values.ConfigManager;
-import me.superblaubeere27.jobf.utils.values.Configuration;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,7 +21,20 @@ import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import static org.junit.Assert.*;
+import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import com.google.common.io.ByteStreams;
+
+import me.superblaubeere27.jobf.JObfImpl;
+import me.superblaubeere27.jobf.utils.values.ConfigManager;
+import me.superblaubeere27.jobf.utils.values.Configuration;
+import me.superblaubeere27.jobf.utils.values.YamlConfigManager;
 
 public class ObfuscatorTest {
     private static File obfuscatedFile = null;
@@ -43,7 +48,15 @@ public class ObfuscatorTest {
             ByteStreams.copy(new URL("https://github.com/SB27Team/JavaFeatureTest/raw/master/JavaFeatureTest.jar").openStream(), new FileOutputStream(input));
 //            impl.addProcessors();
 
-            Configuration configuration = ConfigManager.loadConfig(new String(ByteStreams.toByteArray(ObfuscatorTest.class.getResourceAsStream("/config.jocfg")), StandardCharsets.UTF_8));
+            // Load YAML configuration instead of JSON
+            Configuration configuration;
+            try {
+                // Try to load YAML first
+                configuration = YamlConfigManager.loadConfig(new File(ObfuscatorTest.class.getResource("/config.yml").getFile()));
+            } catch (Exception e) {
+                // Fall back to JSON if YAML fails (for backward compatibility during transition)
+                configuration = ConfigManager.loadConfig(new String(ByteStreams.toByteArray(ObfuscatorTest.class.getResourceAsStream("/config.jocfg")), StandardCharsets.UTF_8));
+            }
 
             configuration.setInput(input.getAbsolutePath());
             configuration.setOutput((obfuscatedFile = File.createTempFile("obf_", ".jar")).getAbsolutePath());

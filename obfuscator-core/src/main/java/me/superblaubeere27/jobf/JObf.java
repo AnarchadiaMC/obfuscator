@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,8 +29,11 @@ import com.google.common.io.ByteStreams;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import me.superblaubeere27.jobf.utils.ConfigurationDebugger;
 import me.superblaubeere27.jobf.utils.values.ConfigManager;
+import me.superblaubeere27.jobf.utils.values.ConfigMigrationUtil;
 import me.superblaubeere27.jobf.utils.values.Configuration;
+import me.superblaubeere27.jobf.utils.values.YamlConfigManager;
 
 public class JObf {
     private static final Logger log = LoggerFactory.getLogger("obfuscator");
@@ -49,13 +53,14 @@ public class JObf {
         parser.accepts("version", "Displays the version number");
         parser.accepts("jarIn", "The input jar").withRequiredArg().required();
         parser.accepts("jarOut", "The output jar").withRequiredArg().required();
-        parser.accepts("config", "The config file").withRequiredArg();
+        parser.accepts("config", "The config file (YAML format preferred)").withRequiredArg();
         parser.accepts("script", "Script for the obfuscator").withRequiredArg();
         parser.accepts("verbose", "Displays verbose debug output");
         parser.accepts("noUpdate", "Skip update check");
         parser.accepts("threads", "Number of threads").withRequiredArg().ofType(Integer.class).defaultsTo(Runtime.getRuntime().availableProcessors());
         parser.accepts("skipLibs", "Skip extracting libraries");
         parser.accepts("libraries", "List of additional libraries").withRequiredArg();
+        parser.accepts("migrateConfigs", "Migrate all JSON configurations to YAML").withOptionalArg();
 
         try {
             OptionSet options = parser.parse(args);
@@ -78,6 +83,23 @@ public class JObf {
 
             if (options.has("config")) {
                 configPath = new File((String) options.valueOf("config"));
+            }
+
+            // Handle migration option
+            if (options.has("migrateConfigs")) {
+                String migrationPath = (String) options.valueOf("migrateConfigs");
+                File migrationDir;
+                
+                if (migrationPath != null && !migrationPath.trim().isEmpty()) {
+                    migrationDir = new File(migrationPath);
+                } else {
+                    migrationDir = new File("."); // Current directory
+                }
+                
+                log.info("Starting migration of JSON configs to YAML in {}", migrationDir.getAbsolutePath());
+                ConfigMigrationUtil.migrateDirectoryToYaml(migrationDir);
+                log.info("Migration complete. Please use the new YAML configuration files.");
+                return;
             }
 
             String scriptContent = null;
@@ -130,6 +152,11 @@ public class JObf {
         log.info("Input: " + jarIn);
         log.info("Output: " + jarOut);
         
+        // Initialize JObfImpl to register processors BEFORE loading config
+        log.info("Initializing obfuscator and registering processors...");
+        JObfImpl.INSTANCE.setThreadCount(threads);
+        
+        // Now that processors are registered, load configuration
         Configuration config = new Configuration(jarIn, jarOut, scriptContent, libraries);
 
         if (configPath != null) {
@@ -138,7 +165,50 @@ public class JObf {
                 return false;
             }
 
-            config = ConfigManager.loadConfig(new String(ByteStreams.toByteArray(new FileInputStream(configPath)), StandardCharsets.UTF_8));
+            try {
+                log.info("Loading configuration from: {}", configPath.getAbsolutePath());
+                // Dump configuration file contents for debugging
+                ConfigurationDebugger.dumpConfigFile(configPath);
+                
+                // Try to load as YAML first
+                if (configPath.getName().endsWith(".yml") || configPath.getName().endsWith(".yaml")) {
+                    log.info("Detected YAML configuration file");
+                    config = YamlConfigManager.loadConfig(configPath);
+                    log.info("YAML configuration loaded successfully");
+                    
+                    // Debug processor values after loading
+                    ConfigurationDebugger.dumpProcessorValues("NameObfuscation");
+                } else if (configPath.getName().endsWith(".json")) {
+                    // Migration: load old JSON file and convert to YAML
+                    log.info("Detected JSON config, migrating to YAML format...");
+                    Path yamlPath = ConfigMigrationUtil.migrateJsonToYaml(configPath);
+                    config = YamlConfigManager.loadConfig(yamlPath.toFile());
+                    log.info("Migration successful. Please use the new YAML config file at {} in the future.", yamlPath);
+                    
+                    // Debug processor values after loading
+                    ConfigurationDebugger.dumpProcessorValues("NameObfuscation");
+                } else {
+                    // Try YAML first, fall back to JSON
+                    try {
+                        log.info("Trying to load as YAML configuration...");
+                        config = YamlConfigManager.loadConfig(configPath);
+                        log.info("YAML configuration loaded successfully");
+                        
+                        // Debug processor values after loading
+                        ConfigurationDebugger.dumpProcessorValues("NameObfuscation");
+                    } catch (Exception e) {
+                        log.warn("Failed to load configuration as YAML, trying JSON format: {}", e.getMessage());
+                        config = ConfigManager.loadConfig(new String(ByteStreams.toByteArray(new FileInputStream(configPath)), StandardCharsets.UTF_8));
+                        // If JSON loading succeeded, create a YAML backup
+                        Path yamlPath = ConfigMigrationUtil.migrateJsonToYaml(configPath);
+                        log.info("Created YAML backup at {}. Please use this file in the future.", yamlPath);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("Failed to load configuration file", e);
+                return false;
+            }
+            
             config.setInput(jarIn);
             config.setOutput(jarOut);
         }
@@ -149,8 +219,18 @@ public class JObf {
             config.setScript(scriptContent);
         }
 
-        JObfImpl.INSTANCE.setThreadCount(threads);
-
+        // Run the actual obfuscation with our now-properly-loaded configuration
+        log.info("Starting obfuscation with loaded configuration:");
+        ConfigurationDebugger.dumpProcessorValues("NameObfuscation");
+        
+        // Reapply configuration now that processors are initialized
+        if (configPath != null) {
+            log.info("Reapplying configuration after processor initialization...");
+            YamlConfigManager.reapplyConfig(configPath);
+            log.info("Configuration after reapplication:");
+            ConfigurationDebugger.dumpProcessorValues("NameObfuscation");
+        }
+        
         try {
             JObfImpl.INSTANCE.processJar(config);
             return true;

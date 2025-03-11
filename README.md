@@ -67,9 +67,9 @@ public class HelloWorld {
 
 `--jarIn <input>` Input JAR
 
-`--jarOut <output>` Output JAR
+`--jarOut <o>` Output JAR
 
-`--config <configFile>` Config File
+`--config <configFile>` Config File (YAML format preferred)
 
 `--cp <classPath>` Class Path
 
@@ -87,96 +87,86 @@ public class HelloWorld {
 
 ### Example Config
 
-```
-{
-  "input": "D:\\Computing\\HelloWorld\\out\\artifacts\\HelloWorld_jar\\HelloWorld.jar",
-  "output": "D:\\Computing\\HelloWorld\\out\\artifacts\\HelloWorld_jar\\HelloWorld-obf.jar",
-  "script": "function isRemappingEnabledForClass(node) {\n    return true;\n}\nfunction isObfuscatorEnabledForClass(node) {\n    return true;\n}",
-  "libraries": [
-    "C:\\Program Files\\Java\\jre1.8.0_211\\lib",
-    "D:\\Computing\\backdoored_old\\dependencies",
-    "D:\\Computing\\backdoored\\libs"
-  ],
-  "Crasher": {
-    "Enabled": false,
-    "Invalid Signatures": true,
-    "Empty annotation spam": true
-  },
-  "InvokeDynamic": {
-    "Enabled": true
-  },
-  "Optimizer": {
-    "Enabled": true,
-    "Replace String.equals()": true,
-    "Replace String.equalsIgnoreCase()": true,
-    "Optimize static string calls": true
-  },
-  "LineNumberRemover": {
-    "Enabled": true,
-    "Rename local variables": true,
-    "Remove Line Numbers": true,
-    "Remove Debug Names": true,
-    "Add Local Variables": true,
-    "New SourceFile Name": ""
-  },
-  "StringEncryption": {
-    "Enabled": true,
-    "HideStrings": true,
-    "AES": true
-  },
-  "NumberObfuscation": {
-    "Enabled": true,
-    "Extract to Array": true,
-    "Obfuscate Zero": true,
-    "Shift": false,
-    "And": false,
-    "Multiple Instructions": true
-  },
-  "ReferenceProxy": {
-    "Enabled": false
-  },
-  "ShuffleMembers": {
-    "Enabled": true
-  },
-  "InnerClassRemover": {
-    "Enabled": true,
-    "Remap": true,
-    "Remove Metadata": true
-  },
-  "NameObfuscation": {
-    "Enabled": true,
-    "Excluded classes": "HelloWorld",
-    "Excluded methods": "",
-    "Excluded fields": ""
-  },
-  "General Settings": {
-    "Custom dictionary": true,
-    "Name dictionary": "hello,world"
-  },
-  "Packager": {
-    "Enabled": false,
-    "Use MainClass from the JAR manifest": true,
-    "Main class": "HelloWorld"
-  },
-  "FlowObfuscator": {
-    "Enabled": true,
-    "Mangle Comparisons": true,
-    "Replace GOTO": true,
-    "Replace If": true,
-    "Bad POP": true,
-    "Bad Concat": true,
-    "Mangle Switches": false,
-    "Mangle Return": false,
-    "Mangle Local Variables": false
-  },
-  "HideMembers": {
-    "Enabled": true
-  },
-  "Inlining": {
-    "Enabled": false
+```yaml
+input: "D:/Computing/HelloWorld/out/artifacts/HelloWorld_jar/HelloWorld.jar"
+output: "D:/Computing/HelloWorld/out/artifacts/HelloWorld_jar/HelloWorld-obf.jar"
+script: |
+  function isRemappingEnabledForClass(node) {
+      return true;
   }
-}
+  function isObfuscatorEnabledForClass(node) {
+      return true;
+  }
+libraries:
+  - "C:/Program Files/Java/jre1.8.0_211/lib"
+  - "D:/Computing/backdoored_old/dependencies"
+  - "D:/Computing/backdoored/libs"
+Crasher:
+  Enabled: false
+  Invalid Signatures: true
+  Empty annotation spam: true
+InvokeDynamic:
+  Enabled: true
+Optimizer:
+  Enabled: true
+  Replace String.equals(): true
+  Replace String.equalsIgnoreCase(): true
+  Optimize static string calls: true
+LineNumberRemover:
+  Enabled: true
+  Rename local variables: true
+  Remove Line Numbers: true
+  Remove Debug Names: true
+  Add Local Variables: true
+  New SourceFile Name: ""
+StringEncryption:
+  Enabled: true
+  HideStrings: true
+  AES: true
+NumberObfuscation:
+  Enabled: true
+  Extract to Array: true
+  Obfuscate Zero: true
+  Shift: false
+  And: false
+  Multiple Instructions: true
+ReferenceProxy:
+  Enabled: false
+ShuffleMembers:
+  Enabled: true
+InnerClassRemover:
+  Enabled: true
+  Remap: true
+  Remove Metadata: true
+NameObfuscation:
+  Enabled: true
+  Excluded classes: "HelloWorld"
+  Excluded methods: ""
+  Excluded fields: ""
+General Settings:
+  Custom dictionary: true
+  Name dictionary: "hello,world"
+Packager:
+  Enabled: false
+  Use MainClass from the JAR manifest: true
+  Main class: "HelloWorld"
+FlowObfuscator:
+  Enabled: true
+  Mangle Comparisons: true
+  Replace GOTO: true
+  Replace If: true
+  Bad POP: true
+  Bad Concat: true
+  Mangle Switches: false
+  Mangle Return: false
+  Mangle Local Variables: false
+HideMembers:
+  Enabled: true
+Inlining:
+  Enabled: false
 ```
+
+> Note: The obfuscator now uses YAML configuration files instead of JSON. JSON configurations are still supported but will be automatically migrated to YAML format. See [CONFIG_MIGRATION.md](CONFIG_MIGRATION.md) for more details.
 
 ### Excluding Classes
 

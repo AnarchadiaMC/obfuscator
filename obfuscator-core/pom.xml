@@ -43,6 +43,7 @@
         <jcp.version>6.1.4</jcp.version>
         <commons-lang3.version>3.13.0</commons-lang3.version>
         <nashorn.version>15.6</nashorn.version>
+        <snakeyaml.version>2.2</snakeyaml.version>
     </properties>
 
     <dependencies>
@@ -95,6 +96,11 @@
             <groupId>org.openjdk.nashorn</groupId>
             <artifactId>nashorn-core</artifactId>
             <version>${nashorn.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>${snakeyaml.version}</version>
         </dependency>
         <dependency>
             <groupId>net.sf.jopt-simple</groupId>
