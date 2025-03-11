@@ -43,7 +43,7 @@ public class NameUtils {
     private static boolean usingCustomDictionary = false;
     private static List<String> classNames = new ArrayList<>();
     private static List<String> names = new ArrayList<>();
-    private static String chars = "Il";
+    private static String chars = "-_|";
 
     @SuppressWarnings("SameParameterValue")
     private static int randInt(int min, int max) {
@@ -219,8 +219,14 @@ public class NameUtils {
 
     public static void applySettings(JObfSettings settings) {
         if (settings.getGeneratorChars().getObject().length() == 0) {
-            settings.getGeneratorChars().setObject("Il");
-            throw new IllegalStateException("The generator chars are empty. Changing them to 'Il'");
+            settings.getGeneratorChars().setObject("-_|");
+            throw new IllegalStateException("The generator chars are empty. Changing them to '-_|'");
+        }
+
+        // Handle the case where "Il" (lowercase I and uppercase l) might have been used in older configs
+        if (settings.getGeneratorChars().getObject().equals("Il")) {
+            System.out.println("WARNING: Using 'Il' for generator chars which produces confusing identifiers.");
+            System.out.println("Consider changing to another character set in your configuration.");
         }
 
         chars = settings.getGeneratorChars().getObject();
@@ -243,7 +249,49 @@ public class NameUtils {
 
         names.clear();
         names = new ArrayList<>();
-        chars = "Il";
+        chars = "-_|";
+    }
+
+    public static void setChars(String newChars) {
+        chars = newChars;
+    }
+    
+    public static String getChars() {
+        return chars;
+    }
+    
+    public static void setUsingCustomDictionary(boolean useCustom) {
+        usingCustomDictionary = useCustom;
+    }
+    
+    public static boolean isUsingCustomDictionary() {
+        return usingCustomDictionary;
+    }
+
+    /**
+     * Directly load name dictionaries from strings instead of files.
+     * Useful for loading from configuration values.
+     * 
+     * @param nameDict Comma-separated list of names for methods/fields
+     * @param classNameDict Comma-separated list of names for classes
+     */
+    public static void loadDictionariesFromStrings(String nameDict, String classNameDict) {
+        if (nameDict != null && !nameDict.trim().isEmpty()) {
+            names.clear();
+            for (String name : nameDict.split(",")) {
+                names.add(name.trim());
+            }
+        }
+        
+        if (classNameDict != null && !classNameDict.trim().isEmpty()) {
+            classNames.clear();
+            for (String className : classNameDict.split(",")) {
+                classNames.add(className.trim());
+            }
+        }
+        
+        // Set usingCustomDictionary to true since we've loaded dictionaries
+        usingCustomDictionary = true;
     }
 
 }

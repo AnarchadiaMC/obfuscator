@@ -75,6 +75,7 @@ import me.superblaubeere27.jobf.utils.scheduler.ScheduledRunnable;
 import me.superblaubeere27.jobf.utils.scheduler.Scheduler;
 import me.superblaubeere27.jobf.utils.script.JObfScript;
 import me.superblaubeere27.jobf.utils.values.Configuration;
+import me.superblaubeere27.jobf.utils.values.Value;
 import me.superblaubeere27.jobf.utils.values.ValueManager;
 
 public class JObfImpl {
@@ -102,6 +103,9 @@ public class JObfImpl {
     private JObfImpl() {
         this.random = new Random();
         this.threadCount = Runtime.getRuntime().availableProcessors();
+        
+        // Register settings with ValueManager early
+        ValueManager.registerClass(settings);
         
         // Initialize processors
         processors = new ArrayList<>();
@@ -348,6 +352,10 @@ public class JObfImpl {
 
     public void processJar(Configuration config) throws IOException {
         log.info("Starting JAR processing with configuration...");
+        
+        // Apply configuration values to settings FIRST, before any other operations
+        applyConfigToSettings(config);
+        
         ZipInputStream inJar = null;
         ZipOutputStream outJar = null;
 
@@ -361,6 +369,7 @@ public class JObfImpl {
         files = new HashMap<>();
         hierarchy = new HashMap<>();
 
+        // Apply settings to NameUtils AFTER config has been applied
         log.info("Applying settings to name utils...");
         NameUtils.applySettings(settings);
         NameUtils.setup();
@@ -741,5 +750,64 @@ public class JObfImpl {
     public void registerClassRename(String originalName, String newName) {
         classRenameMappings.put(originalName, newName);
         log.info("Registered class rename: " + originalName + " -> " + newName);
+    }
+
+    /**
+     * Applies configuration values from the loaded config to the JObfSettings object
+     * before it's used in the obfuscation process.
+     *
+     * @param config The loaded configuration
+     */
+    private void applyConfigToSettings(Configuration config) {
+        log.info("Applying configuration values to settings...");
+        
+        // Get the general settings values from ValueManager
+        Map<String, Value<?>> generalSettings = ValueManager.getValuesForOwner("General Settings");
+        
+        if (generalSettings != null && !generalSettings.isEmpty()) {
+            log.info("Found {} General Settings values in the configuration", generalSettings.size());
+            
+            // Generator characters
+            Value<?> generatorCharsValue = generalSettings.get("Generator characters");
+            if (generatorCharsValue != null) {
+                String configValue = generatorCharsValue.getObject().toString();
+                settings.getGeneratorChars().setObject(configValue);
+                log.info("Updated generator characters from config: {}", configValue);
+            }
+            
+            // Custom dictionary setting
+            Value<?> customDictValue = generalSettings.get("Custom dictionary");
+            if (customDictValue != null && customDictValue.getObject() instanceof Boolean) {
+                boolean useCustomDict = (Boolean) customDictValue.getObject();
+                settings.getUseCustomDictionary().setObject(useCustomDict);
+                log.info("Updated custom dictionary setting from config: {}", useCustomDict);
+            }
+            
+            // Name dictionary
+            Value<?> nameDictValue = generalSettings.get("Name dictionary");
+            if (nameDictValue != null) {
+                String nameDict = nameDictValue.getObject().toString();
+                settings.getNameDictionary().setObject(nameDict);
+                log.info("Updated name dictionary from config: {}", nameDict);
+            }
+            
+            // Class name dictionary
+            Value<?> classNameDictValue = generalSettings.get("Class Name dictionary");
+            if (classNameDictValue != null) {
+                String classNameDict = classNameDictValue.getObject().toString();
+                settings.getClassNameDictionary().setObject(classNameDict);
+                log.info("Updated class name dictionary from config: {}", classNameDict);
+            }
+            
+            // STORE setting
+            Value<?> useStoreValue = generalSettings.get("Use STORE instead of DEFLATE");
+            if (useStoreValue != null && useStoreValue.getObject() instanceof Boolean) {
+                boolean useStore = (Boolean) useStoreValue.getObject();
+                settings.getUseStore().setObject(useStore);
+                log.info("Updated STORE setting from config: {}", useStore);
+            }
+        } else {
+            log.warn("No general settings found in configuration. Using default values.");
+        }
     }
 }

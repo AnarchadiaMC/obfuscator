@@ -18,7 +18,7 @@ import me.superblaubeere27.jobf.utils.values.StringValue;
 public class JObfSettings {
     private static final String PROCESSOR_NAME = "General Settings";
 
-    private StringValue generatorChars = new StringValue(PROCESSOR_NAME, "Generator characters", DeprecationLevel.GOOD, "Il");
+    private StringValue generatorChars = new StringValue(PROCESSOR_NAME, "Generator characters", DeprecationLevel.GOOD, "-_|");
     private BooleanValue useCustomDictionary = new BooleanValue(PROCESSOR_NAME, "Custom dictionary", DeprecationLevel.GOOD, false);
     private FilePathValue classNameDictionary = new FilePathValue(PROCESSOR_NAME, "Class Name dictionary", DeprecationLevel.GOOD, "");
     private FilePathValue nameDictionary = new FilePathValue(PROCESSOR_NAME, "Name dictionary", DeprecationLevel.GOOD, "");

@@ -9,9 +9,9 @@ script: |
       return true;
   }
 Crasher:
-  Enabled: false
+  Enabled: true
   Invalid Signatures: false
-  Empty annotation spam: false
+  Empty annotation spam: true
 InvokeDynamic:
   Enabled: true
 Optimizer:
@@ -33,9 +33,9 @@ StringEncryption:
 NumberObfuscation:
   Enabled: true
   Extract to Array: true
-  Obfuscate Zero: false
-  Shift: false
-  And: false
+  Obfuscate Zero: true
+  Shift: true
+  And: true
   Multiple Instructions: true
 ReferenceProxy:
   Enabled: false
@@ -60,7 +60,7 @@ NameObfuscation:
 HideMembers:
   Enabled: true
 Inlining:
-  Enabled: true
+  Enabled: false
 FlowObfuscator:
   Enabled: true
   Mangle Switches: true
@@ -71,7 +71,7 @@ FlowObfuscator:
   Bad Concat: true
   Mangle Local Variables: true
 General Settings:
-  Generator characters: "·•⋅∙◦⚫⦁⸰⸱⸳᛫‧․⋯⁘⁙⁚⁛⁜⟡⟐⊙"
-  Custom dictionary: true
-  Name dictionary: "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,а,ɑ,е,é,о,ο,р,ρ,с,σ,х,χ,у,υ,ј,і,ӏ,ᅠ"
+  Generator characters: "·•⋅∙◦●⦁⸰⸱⸳᛫‧․⋯⁘⁙⁚⁛⁜⟡⟐⊙"
+  Custom dictionary: false
+  Name dictionary: "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z"
   Use STORE instead of DEFLATE: false
