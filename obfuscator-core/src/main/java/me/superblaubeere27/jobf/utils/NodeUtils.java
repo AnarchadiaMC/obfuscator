@@ -10,15 +10,6 @@
 
 package me.superblaubeere27.jobf.utils;
 
-import me.superblaubeere27.jobf.JObf;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.*;
-import org.objectweb.asm.util.Printer;
-import org.objectweb.asm.util.Textifier;
-import org.objectweb.asm.util.TraceMethodVisitor;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -26,7 +17,33 @@ import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.function.Predicate;
 
-import static org.objectweb.asm.Opcodes.*;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Opcodes;
+import static org.objectweb.asm.Opcodes.ACONST_NULL;
+import static org.objectweb.asm.Opcodes.BIPUSH;
+import static org.objectweb.asm.Opcodes.DCONST_0;
+import static org.objectweb.asm.Opcodes.FCONST_0;
+import static org.objectweb.asm.Opcodes.ICONST_0;
+import static org.objectweb.asm.Opcodes.ICONST_5;
+import static org.objectweb.asm.Opcodes.ICONST_M1;
+import static org.objectweb.asm.Opcodes.LCONST_0;
+import static org.objectweb.asm.Opcodes.SIPUSH;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.IntInsnNode;
+import org.objectweb.asm.tree.LdcInsnNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.VarInsnNode;
+import org.objectweb.asm.util.Printer;
+import org.objectweb.asm.util.Textifier;
+import org.objectweb.asm.util.TraceMethodVisitor;
+
+import me.superblaubeere27.jobf.JObf;
 
 public class NodeUtils {
     private static final Printer printer = new Textifier();
@@ -293,4 +310,26 @@ public class NodeUtils {
 //
 //        return NodeUtils.TYPE_TO_LOAD.get(argumentType);
 //    }
+
+    /**
+     * Generates bytecode instructions to create and populate a byte array with given values
+     *
+     * @param bytes The byte array to generate
+     * @return Instructions to create the byte array
+     */
+    public static InsnList generateByteArray(byte[] bytes) {
+        InsnList instructions = new InsnList();
+        
+        instructions.add(generateIntPush(bytes.length));
+        instructions.add(new IntInsnNode(Opcodes.NEWARRAY, Opcodes.T_BYTE));
+        
+        for (int i = 0; i < bytes.length; i++) {
+            instructions.add(new InsnNode(Opcodes.DUP));
+            instructions.add(generateIntPush(i));
+            instructions.add(generateIntPush(bytes[i] & 0xFF));
+            instructions.add(new InsnNode(Opcodes.BASTORE));
+        }
+        
+        return instructions;
+    }
 }
